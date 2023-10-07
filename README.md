@@ -1,7 +1,7 @@
 # Noso Data Migration Tools
 
 
-<!-- [![Build Status](https://github.com/gcarreno/NosoData-Migration-Tools/workflows/build-test/badge.svg?branch=main)](https://github.com/gcarreno/NosoData-Migration-Tools/actions) -->
+[![Build Status](https://github.com/gcarreno/NosoData-Migration-Tools/workflows/build-test/badge.svg?branch=main)](https://github.com/gcarreno/NosoData-Migration-Tools/actions)
 [![Supports Windows](https://img.shields.io/badge/support-Windows-blue?logo=Windows)](https://github.com/gcarreno/NosoData-Migration-Tools/releases/latest)
 [![Supports Linux](https://img.shields.io/badge/support-Linux-yellow?logo=Linux)](https://github.com/gcarreno/NosoData-Migration-Tools/releases/latest)
 [![Supports macOS](https://img.shields.io/badge/support-macOS-black?logo=macOS)](https://github.com/gcarreno/NosoData-Migration-Tools/releases/latest)
