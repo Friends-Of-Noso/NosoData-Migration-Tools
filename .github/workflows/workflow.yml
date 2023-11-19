@@ -17,6 +17,10 @@ jobs:
         operating-system: [ubuntu-latest, macos-latest]
         lazarus-versions: [stable, 2.2.0, 2.0.12]
     steps:
+    - name: Install GDBM
+      if: matrix.operating-system == 'ubuntu-latest'
+      run: sudo apt install -y libgdbm-dev
+
     - name: Checkout Repository
       uses: actions/checkout@v3
       with:
@@ -27,7 +31,9 @@ jobs:
       with:
         lazarus-version: ${{ matrix.lazarus-versions }}
         with-cache: false
+
     - name: Build the Migration to Server App
       run: lazbuild -B --bm=Release "migration2server/migration2server.lpi"
+
     - name: Build the Migration to Wallet App
       run: lazbuild -B --bm=Release "migration2wallet/migration2wallet.lpi"
