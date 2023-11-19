@@ -30,7 +30,7 @@ var
   blockHeight: Int64 = 0;
 
 const
-  cVersion = '0.1';
+  cVersion = {$I 'version.inc'};
   cNosoCoinFolderName = 'NosoCoin';
   cNOSODATAFolder = 'NOSODATA';
   cBLOCKSFolder = 'BLOCKS';
