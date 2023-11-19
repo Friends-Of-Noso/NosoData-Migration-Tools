@@ -2,7 +2,6 @@
 
 
 [![Build Status](https://github.com/Friends-Of-Noso/NosoData-Migration-Tools/workflows/build-test/badge.svg)](https://github.com/Friends-Of-Noso/NosoData-Migration-Tools/actions)
-[![Supports Windows](https://img.shields.io/badge/support-Windows-blue?logo=Windows)](https://github.com/Friends-Of-Noso/NosoData-Migration-Tools/releases/latest)
 [![Supports Linux](https://img.shields.io/badge/support-Linux-yellow?logo=Linux)](https://github.com/Friends-Of-Noso/NosoData-Migration-Tools/releases/latest)
 [![Supports macOS](https://img.shields.io/badge/support-macOS-black?logo=macOS)](https://github.com/Friends-Of-Noso/NosoData-Migration-Tools/releases/latest)
 [![License](https://img.shields.io/github/license/Friends-Of-Noso/NosoData-Migration-Tools)](https://github.com/Friends-Of-Noso/NosoData-Migration-Tools/blob/master/LICENSE)
