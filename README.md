@@ -16,3 +16,8 @@ This tool will allow the migration of the blockchain from the legacy node format
 ## `migration2wallet`
 
 At present moment this idea is still very fluid and will depend on decisions made after the `NosoServer` is completed.
+
+## Support for Windows and macOS
+
+This appears to be possible, from some Internet searches( Windows ) and the results of the compilation under macOS.
+I will not pursue it myself and will leave it to the more competent programmers to sort it out if they really need support for Windows and macOS.
