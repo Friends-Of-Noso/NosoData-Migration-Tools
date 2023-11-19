@@ -7,7 +7,9 @@ uses
   cthreads,
   {$ENDIF}
   Classes, SysUtils, CustApp
-  { you can add units after this };
+  { you can add units after this }
+, Noso.Data.Legacy.Block
+;
 
 type
 
@@ -21,7 +23,8 @@ type
     destructor Destroy; override;
     procedure WriteHelp; virtual;
     procedure WriteVersion;
-    procedure FindBlocks(const APath: String);
+    procedure FindBlocks;
+    procedure MigrateBlocks;
   end;
 
 var
@@ -34,6 +37,10 @@ const
   cNosoCoinFolderName = 'NosoCoin';
   cNOSODATAFolder = 'NOSODATA';
   cBLOCKSFolder = 'BLOCKS';
+  cNosoServerMain = 'main';
+  cNosoServerBlocks = 'blocks';
+  cNosoServerOrders = 'orders';
+  cNosoServerAccounts = 'accounts';
 
 { TMigrationToServer }
 
@@ -133,7 +140,8 @@ begin
     Exit;
   end;
 
-  FindBlocks(inputFolder);
+  FindBlocks;
+  MigrateBlocks;
 
   // stop program loop
   Terminate;
@@ -170,13 +178,13 @@ begin
   WriteLn;
 end;
 
-procedure TMigrationToServer.FindBlocks(const APath: String);
+procedure TMigrationToServer.FindBlocks;
 var
   found: Boolean = false;
   blockFile: String;
 begin
   repeat
-    blockFile:= Format('%s%d.blk', [ APath, blockHeight ]);
+    blockFile:= Format('%s%d.blk', [ inputFolder, blockHeight ]);
     found:= FileExists(blockFile);
     if found then
     begin
@@ -185,6 +193,26 @@ begin
     end;
   until not found;
   WriteLn;//('                              ');
+end;
+
+procedure TMigrationToServer.MigrateBlocks;
+var
+  index: Int64;
+  legacyBlock: TLegacyBlock;
+  legacyBlockFilename: String;
+begin
+  for index:= 0 to blockHeight do
+  begin
+    Write(#13'Migrating block ', index, ' of ', blockHeight);
+    legacyBlockFilename:= Format('%s%d.blk', [ inputFolder, index ]);
+    legacyBlock:= TLegacyBlock.Create(legacyBlockFilename);
+    try
+      //
+    finally
+      legacyBlock.Free;
+    end;
+  end;
+  WriteLn;
 end;
 
 var
