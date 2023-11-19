@@ -8,6 +8,7 @@ uses
   {$ENDIF}
   Classes, SysUtils, CustApp
   { you can add units after this }
+, gdbm
 , Noso.Data.Legacy.Block
 ;
 
@@ -37,6 +38,7 @@ const
   cNosoCoinFolderName = 'NosoCoin';
   cNOSODATAFolder = 'NOSODATA';
   cBLOCKSFolder = 'BLOCKS';
+  cGDBMBlocksFile = 'blocks.dat';
   cNosoServerMain = 'main';
   cNosoServerBlocks = 'blocks';
   cNosoServerOrders = 'orders';
@@ -183,34 +185,79 @@ var
   found: Boolean = false;
   blockFile: String;
 begin
+  WriteLn('Scanning "', ExcludeTrailingPathDelimiter(inputFolder), '" ...');
+
   repeat
     blockFile:= Format('%s%d.blk', [ inputFolder, blockHeight ]);
     found:= FileExists(blockFile);
     if found then
     begin
-      Write(Format(#13'Found: %d.blk', [blockHeight]));
+      Write(Format(#13'    Found: %d.blk', [blockHeight]));
       Inc(blockHeight);
     end;
   until not found;
-  WriteLn;//('                              ');
+  WriteLn;
 end;
 
 procedure TMigrationToServer.MigrateBlocks;
 var
   index: Int64;
+  progress: double;
   legacyBlock: TLegacyBlock;
   legacyBlockFilename: String;
+  gdbmBlocks: PGDBM_FILE;
 begin
-  for index:= 0 to blockHeight do
+  WriteLn('Migratting from "', ExcludeTrailingPathDelimiter(inputFolder), '"');
+  WriteLn('           to   "', ExcludeTrailingPathDelimiter(outputFolder), '" ...');
+
+  if not DirectoryExists(outputFolder + cNosoServerMain) then
   begin
-    Write(#13'Migrating block ', index, ' of ', blockHeight);
-    legacyBlockFilename:= Format('%s%d.blk', [ inputFolder, index ]);
-    legacyBlock:= TLegacyBlock.Create(legacyBlockFilename);
-    try
-      //
-    finally
-      legacyBlock.Free;
+    CreateDir(outputFolder + cNosoServerMain);
+  end;
+  outputFolder:= IncludeTrailingPathDelimiter(outputFolder + cNosoServerMain);
+
+  if not DirectoryExists(outputFolder + cNosoServerBlocks) then
+  begin
+    CreateDir(outputFolder + cNosoServerBlocks);
+  end;
+  outputFolder:= IncludeTrailingPathDelimiter(outputFolder + cNosoServerBlocks);
+
+  if FileExists(outputFolder + cGDBMBlocksFile) then
+  begin
+    DeleteFile(outputFolder + cGDBMBlocksFile);
+  end;
+
+  gdbmBlocks:= gdbm_open(outputFolder + cGDBMBlocksFile, 512, GDBM_NEWDB, 432, nil);
+  try
+    for index:= 0 to Pred(blockHeight) do
+    begin
+      progress := (index * 100) / blockHeight;
+      Write(#13'    ', Format('Migrating block %d of %d ( %.2f %% )', [ index, blockHeight, progress ]));
+      legacyBlockFilename:= Format('%s%d.blk', [ inputFolder, index ]);
+      legacyBlock:= TLegacyBlock.Create(legacyBlockFilename);
+      try
+        // By Number
+        gdbm_store(
+          gdbmBlocks,
+          IntToStr(index),
+          Format('{"hash":"%s"}', [ legacyBlock.Hash ]),
+          GDBM_INSERT
+        );
+        // By Hash
+        gdbm_store(
+          gdbmBlocks,
+          legacyBlock.Hash,
+          Format('{"number":"%d"}', [ legacyBlock.Number ]),
+          GDBM_INSERT
+        );
+
+        Sleep(1);
+      finally
+        legacyBlock.Free;
+      end;
     end;
+  finally
+    gdbm_close(gdbmBlocks);
   end;
   WriteLn;
 end;
