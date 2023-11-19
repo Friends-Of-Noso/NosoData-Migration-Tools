@@ -22,6 +22,13 @@ type
     procedure WriteHelp; virtual;
   end;
 
+var
+  inputFolder: String;
+  outputFolder: String;
+
+const
+  cNosoCoinFolderName = 'NosoCoin';
+
 { TMigrationToServer }
 
 procedure TMigrationToServer.DoRun;
@@ -29,7 +36,7 @@ var
   ErrorMsg: String;
 begin
   // quick check parameters
-  ErrorMsg:=CheckOptions('h', 'help');
+  ErrorMsg:=CheckOptions('hio', ['help', 'input', 'output']);
   if ErrorMsg<>'' then begin
     ShowException(Exception.Create(ErrorMsg));
     Terminate;
@@ -37,13 +44,32 @@ begin
   end;
 
   // parse parameters
+  // Help
   if HasOption('h', 'help') then begin
     WriteHelp;
     Terminate;
     Exit;
   end;
+  // Input Folder
+  if HasOption('i', 'input') then
+  begin
+    inputFolder:= GetOptionValue('i', 'input');
+  end
+  else
+  begin
+    inputFolder:= ExtractFileDir(Params[0]);
+  end;
+  // Output Folder
+  if HasOption('o', 'output') then begin
+    outputFolder:= GetOptionValue('o', 'output');
+  end
+  else
+  begin
+    outputFolder:= GetUserDir + cNosoCoinFolderName;
+  end;
 
-  { add your program here }
+  WriteLn('Input  Folder: ', inputFolder);
+  WriteLn('Output Folder: ', outputFolder);
 
   // stop program loop
   Terminate;
@@ -63,7 +89,13 @@ end;
 procedure TMigrationToServer.WriteHelp;
 begin
   { add your help code here }
-  writeln('Usage: migration2server -h');
+  writeln('Usage: migration2server [OPTIONS]');
+  writeln;
+  writeln('OPTIONS');
+  writeln('  -h|--help    Displays this help message.');
+  writeln('  -i|--input   Input folder that contains "NOSODATA" folder. ( Defaults to current folder )');
+  writeln('  -o|--output  Output folder. ( Defaults to "~/NosoCoin" )');
+  writeln;
 end;
 
 var
