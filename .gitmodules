@@ -1,0 +1,3 @@
+[submodule "3rdParty/NosoData"]
+	path = 3rdParty/NosoData
+	url = https://github.com/Friends-Of-Noso/NosoData
