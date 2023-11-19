@@ -9,6 +9,7 @@ uses
   Classes, SysUtils, CustApp
   { you can add units after this }
 , gdbm
+, fpjson
 , Noso.Data.Legacy.Block
 ;
 
@@ -35,14 +36,32 @@ var
 
 const
   cVersion = {$I 'version.inc'};
-  cNosoCoinFolderName = 'NosoCoin';
+
   cNOSODATAFolder = 'NOSODATA';
   cBLOCKSFolder = 'BLOCKS';
+
+  cNosoCoinFolderName = 'NosoCoin';
   cGDBMBlocksFile = 'blocks.dat';
   cNosoServerMain = 'main';
   cNosoServerBlocks = 'blocks';
   cNosoServerOrders = 'orders';
   cNosoServerAccounts = 'accounts';
+
+  cJSONBlockNumber = 'number';
+  cJSONBlockHash = 'hash';
+  cJSONBlockTimeStart = 'time-start';
+  cJSONBlockTimeEnd = 'time-end';
+  cJSONBlockTimeTotal = 'time-total';
+  cJSONBlockTimeLast20 = 'time-last-20';
+  cJSONBlockTransactions = 'transactions';
+  cJSONBlockDifficulty = 'difficulty';
+  cJSONBlockTargetHash = 'target-hash';
+  cJSONBlockSolution = 'solution';
+  cJSONBlockLastBlockHash = 'last-block-hash';
+  cJSONBlockNextBlockDifficulty = 'nest-block-difficulty';
+  cJSONBlockMiner = 'miner';
+  cJSONBlockFee = 'fee';
+  cJSONBlockreward = 'reward';
 
 { TMigrationToServer }
 
@@ -142,8 +161,11 @@ begin
     Exit;
   end;
 
+  WriteLn;
   FindBlocks;
+  WriteLn;
   MigrateBlocks;
+  WriteLn;
 
   // stop program loop
   Terminate;
@@ -206,6 +228,50 @@ var
   legacyBlock: TLegacyBlock;
   legacyBlockFilename: String;
   gdbmBlocks: PGDBM_FILE;
+
+  function JSONBlockByNumber(const ABlock: TLegacyBlock): String;
+  var
+    jBlock: TJSONObject;
+  begin
+    Result:= EmptyStr;
+    jBlock:= TJSONObject.Create;
+    try
+      jBlock.Add(cJSONBlockHash, ABlock.Hash);
+      jBlock.CompressedJSON:= True;
+      Result:= jBlock.AsJSON;
+    finally
+      jBlock.Free;
+    end;
+  end;
+
+  function JSONBlockByHash(const ABlock: TLegacyBlock): String;
+  var
+    jBlock: TJSONObject;
+  begin
+    Result:= EmptyStr;
+    jBlock:= TJSONObject.Create;
+    try
+      jBlock.Add(cJSONBlockNumber, ABlock.Number);
+      jBlock.Add(cJSONBlockTimeStart, ABlock.TimeStart);
+      jBlock.Add(cJSONBlockTimeEnd, ABlock.TimeEnd);
+      jBlock.Add(cJSONBlockTimeTotal, ABlock.TimeTotal);
+      jBlock.Add(cJSONBlockTimeLast20, ABlock.TimeLast20);
+      jBlock.Add(cJSONBlockTransactions, ABlock.Transactions.Count);
+      jBlock.Add(cJSONBlockDifficulty, ABlock.Difficulty);
+      jBlock.Add(cJSONBlockTargetHash, ABlock.TargetHash);
+      jBlock.Add(cJSONBlockSolution, ABlock.Solution);
+      jBlock.Add(cJSONBlockLastBlockHash, ABlock.LastBlockHash);
+      jBlock.Add(cJSONBlockNextBlockDifficulty, ABlock.NextBlockDifficulty);
+      jBlock.Add(cJSONBlockMiner, ABlock.Miner);
+      jBlock.Add(cJSONBlockFee, ABlock.Fee);
+      jBlock.Add(cJSONBlockreward, ABlock.Reward);
+      jBlock.CompressedJSON:= True;
+      Result:= jBlock.AsJSON;
+    finally
+      jBlock.Free;
+    end;
+  end;
+
 begin
   WriteLn('Migratting from "', ExcludeTrailingPathDelimiter(inputFolder), '"');
   WriteLn('           to   "', ExcludeTrailingPathDelimiter(outputFolder), '" ...');
@@ -232,7 +298,7 @@ begin
     for index:= 0 to Pred(blockHeight) do
     begin
       progress := (index * 100) / blockHeight;
-      Write(#13'    ', Format('Migrating block %d of %d ( %.2f %% )', [ index, blockHeight, progress ]));
+      Write(#13'    ', Format('Migrating block %d of %d ( %.2f %% )', [ index, Pred(blockHeight), progress ]));
       legacyBlockFilename:= Format('%s%d.blk', [ inputFolder, index ]);
       legacyBlock:= TLegacyBlock.Create(legacyBlockFilename);
       try
@@ -240,14 +306,14 @@ begin
         gdbm_store(
           gdbmBlocks,
           IntToStr(index),
-          Format('{"hash":"%s"}', [ legacyBlock.Hash ]),
+          JSONBlockByNumber(legacyBlock),
           GDBM_INSERT
         );
         // By Hash
         gdbm_store(
           gdbmBlocks,
           legacyBlock.Hash,
-          Format('{"number":"%d"}', [ legacyBlock.Number ]),
+          JSONBlockByHash(legacyBlock),
           GDBM_INSERT
         );
 
